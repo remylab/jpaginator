@@ -233,10 +233,11 @@
 
 		var settings = that.data('jPaginator').settings;
 		var controls = that.data('jPaginator').controls;
+
+		moveSliderTo(that, controls.cInf);  
+		
 		var newNum = settings.selectedPage- Math.floor((settings.length-1)/2);
 		updateNum(that, newNum );
-
-		moveSliderTo(that, controls.cInf);
 
 		if (typeof(jPaginatorPageClicked) == "function") {
 			jPaginatorPageClicked(that.attr("id"),settings.selectedPage); 
