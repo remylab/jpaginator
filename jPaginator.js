@@ -37,7 +37,7 @@
 				coeffAcceleration:2,
 				minSlidesForSlider:3
 			};
-			
+
 			var controls = {
 				realWid:0,
 				curNum:1,
@@ -47,15 +47,16 @@
 				nbMove:0,
 				isMoving:false,
 				isLimitL:false,
-				isLimitR:false
+				isLimitR:false,
+				listenSlider:true
 			};
 
 			return this.each(function(){
 
-				var $this = $(this); 
-				var data = $this.data('jPaginator');   
+				var $this = $(this);
+				var data = $this.data('jPaginator');
 
-				if ( options ) { 
+				if ( options ) {
 					$.extend( settings, options );
 				}
 
@@ -111,7 +112,7 @@
 				$this.find(".paginator_p_wrap").css("width",widAll+ "px");
 				$this.find(".paginator_slider").css("width",widAll+ "px");
 
-				controls.cInfMax = settings.nbPages * controls.realWid - ( settings.length * controls.realWid ) ; 
+				controls.cInfMax = settings.nbPages * controls.realWid - ( settings.length * controls.realWid ) ;
 
 				// init selected page
 				settings.selectedPage = Math.min(settings.selectedPage,settings.nbPages);
@@ -173,9 +174,9 @@
 		// chainability : return this.each(function(){var $this = $(this);});
 		destroy : function( ) {
 
-			return this.each(function(){  
+			return this.each(function(){
 				$(window).unbind('.jPaginator');
-				$(this).removeData('jPaginator');  
+				$(this).removeData('jPaginator');
 			});
 
 		}
@@ -183,7 +184,7 @@
 	}; // fin public methods
 
 	// private methods
-	function onClickNum(that,e) { 
+	function onClickNum(that,e) {
 		var settings = that.data('jPaginator').settings;
 
 		var newPage = 1*e.html();
@@ -193,23 +194,23 @@
 		// update data
 		that.data('jPaginator').settings = settings ;
 
-		goToSelectedPage(that);		
+		goToSelectedPage(that);
 	}
 
-	function onEnterButton(that,e) { 
+	function onEnterButton(that,e) {
 		var controls = that.data('jPaginator').controls;
 
 		var dir = 'left';
 		if ( e.hasClass("right") ) { dir = 'right'; }
 		controls.isMoving = true ;
-		
+
 		// update data
 		that.data('jPaginator').controls = controls ;
 
 		move(that,dir);
 	}
 
-	function onLeaveButton(that,e) { 
+	function onLeaveButton(that,e) {
 		reset(that);
 	}
 
@@ -219,7 +220,7 @@
 		moveToLimit(that,dir);
 	}
 
-	function onEnterNum(that,e) { 
+	function onEnterNum(that,e) {
 		that.find(".paginator_p.hover").removeClass("hover");
 		e.addClass("hover");
 	}
@@ -234,13 +235,19 @@
 		var settings = that.data('jPaginator').settings;
 		var controls = that.data('jPaginator').controls;
 
-		moveSliderTo(that, controls.cInf);  
-		
 		var newNum = settings.selectedPage- Math.floor((settings.length-1)/2);
 		updateNum(that, newNum );
 
+        controls.listenSlider =  false;
+        that.data('jPaginator', {settings : settings,controls : controls});
+
+		moveSliderTo(that, controls.cInf);
+
+        controls.listenSlider =  true;
+        that.data('jPaginator', {settings : settings,controls : controls});
+
 		if (typeof(jPaginatorPageClicked) == "function") {
-			jPaginatorPageClicked(that.attr("id"),settings.selectedPage); 
+			jPaginatorPageClicked(that.attr("id"),settings.selectedPage);
 		}
 	}
 
@@ -276,21 +283,23 @@
 
 		var settings = that.data('jPaginator').settings;
 		var controls = that.data('jPaginator').controls;
-	  
+
 		var newPc = Math.round( (pos / controls.cInfMax) * 100 ) ;
 		var oldPc = that.find(".paginator_slider").slider("option", "value");
 
 		if ( newPc != oldPc ) {
 			that.find(".paginator_slider").slider("option", "value", newPc);
 		}
-	} 
+	}
 
 	function handleSliderChange(that,e, ui) {
 
 		var controls = that.data('jPaginator').controls;
 
+		if ( ! controls.listenSlider ) { return; }
+
 		if ( !controls.isMoving ) {
-			moveToPc(that,ui.value);			 
+			moveToPc(that,ui.value);
 		}
 	}
 
@@ -304,13 +313,13 @@
 
 		var realInf = Math.round( controls.cInfMax * pc / 100);
 		var gap = realInf-controls.cInf;
-		
+
 		if ( pc == 100 ) { updateNum(that,settings.nbPages-settings.length+1); return; } ;
 		if ( pc == 0 ) { updateNum(that,1); return; } ;
 
 		moveGap(that,gap);
 	}
-	
+
 
 	function moveGap(that,gap) {
 
@@ -318,11 +327,11 @@
 		var controls = that.data('jPaginator').controls;
 
 		var iGap = Math.abs(gap)/gap;
-		var pxGap = controls.infRel+gap; 
+		var pxGap = controls.infRel+gap;
 		var pageGap = iGap * Math.floor( Math.abs(pxGap)/controls.realWid);
 		var dGap = pxGap%controls.realWid;
 
-		controls.infRel = dGap;    
+		controls.infRel = dGap;
 
 		var cInfTmp = (controls.curNum - 1) * controls.realWid + controls.infRel ;
 
@@ -348,7 +357,7 @@
 		moveSliderTo(that,controls.cInf);
 		that.find(".paginator_p_bloc").css("left", -1*dGap-controls.realWid +"px");
 
-	} 
+	}
 	function reset(that) {
 		var controls = that.data('jPaginator').controls;
 
@@ -372,7 +381,7 @@
 
 		moveGap(that,gap);
 
-		setTimeout(function() { 
+		setTimeout(function() {
 			controls.nbMove +=1;
 			moveToLimit(that,dir);
 		}, 20);
@@ -385,21 +394,21 @@
 
 		if ( controls.isMoving ) {
 
-			var gap = Math.min( Math.abs(settings.speed) ,5); 
-			var coeff = Math.min( Math.abs(settings.coeffAcceleration) ,5); 
+			var gap = Math.min( Math.abs(settings.speed) ,5);
+			var coeff = Math.min( Math.abs(settings.coeffAcceleration) ,5);
 			if ( settings.withAcceleration ) {
-				gap = Math.round( gap +  Math.round( coeff * (controls.nbMove*controls.nbMove)/80000 ) ); 
+				gap = Math.round( gap +  Math.round( coeff * (controls.nbMove*controls.nbMove)/80000 ) );
 			}
 
 			if (dir=='left') { gap *= -1; }
 
 			moveGap(that,gap);
 
-			setTimeout(function() { 
+			setTimeout(function() {
 				controls.nbMove +=1;
 				move(that,dir);
 			}, 10);
-		} 
+		}
 
 	}
 
@@ -413,7 +422,7 @@
 			return methods.init.apply( this, arguments );
 		} else {
 			$.error( 'Method ' +  method + ' does not exist on jQuery.jPaginator' );
-		}    
+		}
 	};
 
 })( jQuery );
