@@ -48,7 +48,7 @@
 				isMoving:false,
 				isLimitL:false,
 				isLimitR:false,
-				listenSlider:true
+				listenSlider:false
 			};
 
 			return this.each(function(){
@@ -202,7 +202,8 @@
 
 		var dir = 'left';
 		if ( e.hasClass("right") ) { dir = 'right'; }
-		controls.isMoving = true ;
+		controls.isMoving = true ;      
+    controls.listenSlider =  false;
 
 		// update data
 		that.data('jPaginator').controls = controls ;
@@ -211,6 +212,9 @@
 	}
 
 	function onLeaveButton(that,e) {
+    var controls = that.data('jPaginator').controls;  
+    controls.listenSlider =  true;
+		that.data('jPaginator').controls = controls ;
 		reset(that);
 	}
 
@@ -237,14 +241,11 @@
 
 		var newNum = settings.selectedPage- Math.floor((settings.length-1)/2);
 		updateNum(that, newNum );
-
-        controls.listenSlider =  false;
-        that.data('jPaginator', {settings : settings,controls : controls});
-
-		moveSliderTo(that, controls.cInf);
-
-        controls.listenSlider =  true;
-        that.data('jPaginator', {settings : settings,controls : controls});
+    
+    moveSliderTo(that, controls.cInf);
+    
+    controls.listenSlider =  true;
+    that.data('jPaginator', {settings : settings,controls : controls});
 
 		if (typeof(jPaginatorPageClicked) == "function") {
 			jPaginatorPageClicked(that.attr("id"),settings.selectedPage);
