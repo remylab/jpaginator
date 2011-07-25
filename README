@@ -1,29 +1,29 @@
 Use this plugin with a unique element, example : $("#test1").jPaginator().
 Example of code : 
 
-		$("#test1").jPaginator({
-			nbPages:54,
-      onPageClicked: function(a,num) {
-          a.next().html("demo1 - page :"+num);
-      }
-		});
+$("#test1").jPaginator({
+    nbPages:54,
+    onPageClicked: function(a,num) {
+    a.next().html("demo1 - page :"+num);
+    }
+});
 
 The HTML :
 
-		<div id="test1">
-				<div class='paginator_root'>
-					<div class='paginator_bmax left'></div><div class='paginator_b left'></div>
-					<div class='paginator_p_wrap'>
-						<div class='paginator_p_bloc'>
+<div id="test1">
+    <div class='paginator_root'>
+        <div class='paginator_bmax left'></div><div class='paginator_b left'></div>
+        <div class='paginator_p_wrap'>
+            <div class='paginator_p_bloc'>
                 <!--<div class='paginator_p'></div>  // page number : dynamically added -->
             </div>
-					</div>
-					<div class='paginator_b right'></div><div class='paginator_bmax right'></div>
-				</div>
-				<div class='paginator_slider' class='ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all'>
-					<a class='ui-slider-handle ui-state-default ui-corner-all' href='#'></a>
-				</div>
+        </div>
+        <div class='paginator_b right'></div><div class='paginator_bmax right'></div>
     </div>
+    <div class='paginator_slider' class='ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all'>
+        <a class='ui-slider-handle ui-state-default ui-corner-all' href='#'></a>
+    </div>
+</div>
     
     		
 Don't forget the CSS page jPaginator.css.
