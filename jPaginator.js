@@ -1,426 +1,322 @@
-(function( $ ){
-
-	var methods = {
-		init : function( options ) {
-
-			if ( this.attr("id") == "" ) {
-				$.error( 'You must define an unique id on your element - ex : $("#myId").jPaginator();' );
-			}
-			if (this.length != 1) {
-				$.error( 'You must use this plugin with a single element - ex : $("#myId").jPaginator();' );
-			}
-
-			$(this).html("").append(
-				"<div class='paginator_root'>"+
-					"<div class='paginator_bmax left'></div><div class='paginator_b left'></div>"+
-					"<div class='paginator_p_wrap'>"+
-						"<div class='paginator_p_bloc'></div>"+
-					"</div>"+
-					"<div class='paginator_b right'></div><div class='paginator_bmax right'></div>"+
-				"</div>"+
-				"<div class='paginator_slider' class='ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all'>"+
-					"<a class='ui-slider-handle ui-state-default ui-corner-all' href='#'></a>"+
-				"</div>"
-			);
-
-
-			var settings = {
-				selectedPage:1,
-				nbPages:100,
-				length:10,
-				widthPx:30,
-				marginPx:1,
-				withSlider:true,
-				withMaxButton:true,
-				withAcceleration:true,
-				speed:2,
-				coeffAcceleration:2,
-				minSlidesForSlider:3
-			};
-
-			var controls = {
-				realWid:0,
-				curNum:1,
-				infRel:0,
-				cInfMax:0,
-				cInf:0,
-				nbMove:0,
-				isMoving:false,
-				isLimitL:false,
-				isLimitR:false,
-				listenSlider:false
-			};
-
-			return this.each(function(){
-
-				var $this = $(this);
-				var data = $this.data('jPaginator');
-
-				if ( options ) {
-					$.extend( settings, options );
-				}
-
-
-				$this.find(".paginator_slider").slider({
-					animate: false
-				});
-
-				// init controls data
-				for (i=1;i<=settings.length+2;i++) {
-					$this.find(".paginator_p_bloc").append($("<div class='paginator_p'></div>") );
-				}
-
-				settings.length = Math.min(settings.length,settings.nbPages);
-
-				var hasHoverButton = true;
-				if ( settings.nbPages <= settings.length ) {
-					$this.find(".paginator_slider").hide();
-					$this.find(".paginator_slider").children().hide();
-					$this.find(".paginator_bmax").hide();
-					$this.find(".paginator_b").hide();
-					hasHoverButton = false;
-				}
-
-
-				var totalSlides = Math.ceil(settings.nbPages/settings.length);
-				if ( totalSlides < settings.minSlidesForSlider) {
-					settings.withSlider = false;
-				}
-
-				if ( !settings.withSlider) {
-					$this.find(".paginator_slider").hide();
-					$this.find(".paginator_slider").children().hide();
-				}
-				if ( !settings.withMaxButton) {
-					$this.find(".paginator_bmax").hide();
-				}
-
-				var borderPx = 0;
-				var sBorder = $this.find(".paginator_p").first().css("border-left-width");
-				if (sBorder.indexOf("px")>0) {
-					borderPx = sBorder.replace("px","")*1;
-				}
-
-				controls.realWid = settings.widthPx + settings.marginPx*2 + borderPx*2;
-
-
-				var widAll = 1* controls.realWid * settings.length ;
-
-				$this.find(".paginator_p").css("width",settings.widthPx + "px");
-				$this.find(".paginator_p").css("margin","0 " + settings.marginPx + "px 0 " + settings.marginPx + "px" );
-
-				$this.find(".paginator_p_wrap").css("width",widAll+ "px");
-				$this.find(".paginator_slider").css("width",widAll+ "px");
-
-				controls.cInfMax = settings.nbPages * controls.realWid - ( settings.length * controls.realWid ) ;
-
-				// init selected page
-				settings.selectedPage = Math.min(settings.selectedPage,settings.nbPages);
-
-				if ( ! data ) {
-
-					$this.data('jPaginator', {
-						settings : settings,
-						controls : controls
-					});
-				}
-
-				goToSelectedPage($this);
-
-
-				// events
-				$this.find(".paginator_p").bind('click.jPaginator', function() {
-					onClickNum($this,$(this));
-				});
-
-				if (settings.withSlider) {
-					$this.find( ".paginator_slider" ).bind( "slidechange.jPaginator", function(event, ui) {
-						handleSliderChange($this,event, ui);
-					});
-
-					$this.find( ".paginator_slider" ).bind( "slide.jPaginator", function(event, ui) {
-						handleSliderChange($this,event, ui);
-					});
-				}
-
-				if ( hasHoverButton ) {
-					$this.find(".paginator_b").bind('mouseenter.jPaginator', function() {
-						onEnterButton($this,$(this));
-					});
-
-					$this.find(".paginator_b").bind('mouseleave.jPaginator', function() {
-						onLeaveButton($this,$(this));
-					});
-				}
-
-				if (settings.withMaxButton) {
-					$this.find(".paginator_bmax").bind('click.jPaginator', function() {
-						onClickButtonLimit($this,$(this));
-					});
-				}
-
-				$this.find(".paginator_p").bind('mouseenter.jPaginator', function() {
-					onEnterNum($this,$(this));
-				});
-
-				$this.find(".paginator_p").bind('mouseleave.jPaginator', function() {
-					onLeaveNum($this,$(this));
-				});
-
-			});
-		},
-
-
-		// chainability : return this.each(function(){var $this = $(this);});
-		destroy : function( ) {
-
-			return this.each(function(){
-				$(window).unbind('.jPaginator');
-				$(this).removeData('jPaginator');
-			});
-
-		}
-
-	}; // fin public methods
-
-	// private methods
-	function onClickNum(that,e) {
-		var settings = that.data('jPaginator').settings;
-
-		var newPage = 1*e.html();
-		that.find(".paginator_p.selected").removeClass("selected");
-		settings.selectedPage = newPage;
-
-		// update data
-		that.data('jPaginator').settings = settings ;
-
-		goToSelectedPage(that);
-	}
-
-	function onEnterButton(that,e) {
-
-		var dir = 'left';
-		if ( e.hasClass("right") ) { dir = 'right'; }
-
-		that.data('jPaginator').controls.isMoving = true ;
-
-		move(that,dir);
-	}
-
-	function onLeaveButton(that,e) {
-		reset(that);
-	}
-
-	function onClickButtonLimit(that,e) {
-		var dir = 'left';
-		if ( e.hasClass("right") ) { dir = 'right'; }
-		moveToLimit(that,dir);
-	}
-
-	function onEnterNum(that,e) {
-		that.find(".paginator_p.hover").removeClass("hover");
-		e.addClass("hover");
-	}
-
-	function onLeaveNum(that,e) {
-		that.find(".paginator_p.hover").removeClass("hover");
-	}
-
-
-	function goToSelectedPage(that) {
-
-		var settings = that.data('jPaginator').settings;
-		var controls = that.data('jPaginator').controls;
-
-		var newNum = settings.selectedPage- Math.floor((settings.length-1)/2);
-
-		updateNum(that, newNum );
-
-        controls.listenSlider = false;
-        controls.infRel = 0;
-        that.data('jPaginator').controls = controls
-    
-        moveSliderTo(that, controls.cInf);
-
-        that.data('jPaginator').controls.listenSlider = true;
-
-		if (typeof(jPaginatorPageClicked) == "function") {
-			jPaginatorPageClicked(that.attr("id"),settings.selectedPage);
-		}
-	}
-
-	function updateNum(that,newNum) {
-
-		var settings = that.data('jPaginator').settings;
-		var controls = that.data('jPaginator').controls;
-
-		that.find(".paginator_p.selected").removeClass("selected");
-
-		newNum = Math.min(settings.nbPages-settings.length+1,newNum);
-		newNum = Math.max(1,newNum);
-
-		var n = newNum-2  ;
-		that.find(".paginator_p_bloc .paginator_p").each(function(i) {
-			n += 1;
-			$(this).html(n);
-			if ( settings.selectedPage == n ) {
-				$(this).addClass("selected");
-			}
-		});
-
-		that.find(".paginator_p_bloc").css("left","-"+controls.realWid+"px");
-
-		controls.curNum = newNum;
-		controls.cInf = (newNum-1)*controls.realWid;
-
-		// update data
-		that.data('jPaginator', {settings : settings,controls : controls});
-
-	}
-	function moveSliderTo(that,pos) {
-
-		var settings = that.data('jPaginator').settings;
-		var controls = that.data('jPaginator').controls;
-
-		var newPc = Math.round( (pos / controls.cInfMax) * 100 ) ;
-		var oldPc = that.find(".paginator_slider").slider("option", "value");
-
-		if ( newPc != oldPc ) {
-			that.find(".paginator_slider").slider("option", "value", newPc);
-		}
-	}
-
-	function handleSliderChange(that,e, ui) {
-
-		var controls = that.data('jPaginator').controls;
-
-		if ( ! controls.listenSlider ) { return; }
-
-		if ( !controls.isMoving ) {
-			moveToPc(that,ui.value);
-		}
-	}
-
-	function moveToPc(that,pc) {
-
-		var settings = that.data('jPaginator').settings;
-		var controls = that.data('jPaginator').controls;
-
-		pc = Math.min(100,pc);
-		pc = Math.max(0,pc);
-
-		var realInf = Math.round( controls.cInfMax * pc / 100);
-		var gap = realInf-controls.cInf;
-
-		if ( pc == 100 ) { updateNum(that,settings.nbPages-settings.length+1); return; } ;
-		if ( pc == 0 ) { updateNum(that,1); return; } ;
-
-		moveGap(that,gap);
-	}
-
-
-	function moveGap(that,gap) {
-
-		var settings = that.data('jPaginator').settings;
-		var controls = that.data('jPaginator').controls;
-
-		var iGap = Math.abs(gap)/gap;
-		var pxGap = controls.infRel+gap;
-		var pageGap = iGap * Math.floor( Math.abs(pxGap)/controls.realWid);
-		var dGap = pxGap%controls.realWid;
-
-		controls.infRel = dGap;
-
-		var cInfTmp = (controls.curNum - 1) * controls.realWid + controls.infRel ;
-
-		var newPage = controls.curNum + pageGap;
-		if ( newPage < 1 )				{ cInfTmp = -1 } ;
-		if ( newPage > settings.nbPages )	{ cInfTmp =  controls.cInfMax + 1 } ;
-
-		if (cInfTmp < 0 ) { doReset = true; updateNum(that,1); controls.cInf = 0; controls.infRel = 0; moveSliderTo(that,0); controls.isLimitL = true; reset(that); return; }
-		if (cInfTmp > controls.cInfMax ) { doReset = true; updateNum(that,settings.nbPages); controls.cInf = controls.cInfMax; controls.infRel = 0;  moveSliderTo(that,controls.cInfMax); controls.isLimitR = true; reset(that); return; }
-
-		controls.isLimitL = false; controls.isLimitR = false;
-
-		controls.cInf = cInfTmp;
-
-		// update data
-		that.data('jPaginator', {settings : settings,controls : controls});
-
-		if (gap == 0) { return; }
-		if ( pageGap != 0 ) {
-			updateNum(that,newPage);
-		}
-
-		moveSliderTo(that,controls.cInf);
-		that.find(".paginator_p_bloc").css("left", -1*dGap-controls.realWid +"px");
-
-	}
-	function reset(that) {
-		var controls = that.data('jPaginator').controls;
-
-		controls.nbMove = 0;
-		controls.isMoving = false;
-
-		// update data
-		that.data('jPaginator').controls = controls ;
-	}
-	function moveToLimit(that,dir) {
-
-		var settings = that.data('jPaginator').settings;
-		var controls = that.data('jPaginator').controls;
-
-		if ( controls.isLimitR && dir == 'right' ) { return ; }
-		if ( controls.isLimitL && dir == 'left' ) { return ; }
-
-		var gap = Math.round(controls.cInfMax/10);
-
-		if (dir=='left') { gap *= -1; }
-
-		moveGap(that,gap);
-
-		setTimeout(function() {
-			controls.nbMove +=1;
-			moveToLimit(that,dir);
-		}, 20);
-
-	}
-	function move(that,dir) {
-
-		var settings = that.data('jPaginator').settings;
-		var controls = that.data('jPaginator').controls;
-
-		if ( controls.isMoving ) {
-
-			var gap = Math.min( Math.abs(settings.speed) ,5);
-			var coeff = Math.min( Math.abs(settings.coeffAcceleration) ,5);
-			if ( settings.withAcceleration ) {
-				gap = Math.round( gap +  Math.round( coeff * (controls.nbMove*controls.nbMove)/80000 ) );
-			}
-
-			if (dir=='left') { gap *= -1; }
-
-			moveGap(that,gap);
-
-			setTimeout(function() {
-				controls.nbMove +=1;
-				move(that,dir);
-			}, 10);
-		}
-
-	}
-
-
-
-	$.fn.jPaginator = function( method ) {
-
-		if ( methods[method] ) {
-			return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ));
-		} else if ( typeof method === 'object' || ! method ) {
-			return methods.init.apply( this, arguments );
-		} else {
-			$.error( 'Method ' +  method + ' does not exist on jQuery.jPaginator' );
-		}
-	};
-
+(function($) {
+$.fn.jPaginator = function(o) {   
+  	
+	if (this.length != 1)
+    $.error( 'You must use this plugin with a unique element' );
+  
+  var s = {
+  	selectedPage:1,
+  	nbPages:100,
+  	length:10,
+  	widthPx:30,
+  	marginPx:1,
+  	withSlider:true,
+  	withMaxButton:true,
+  	withAcceleration:true,
+  	speed:2,
+  	coeffAcceleration:2,
+  	minSlidesForSlider:3,
+  	onPageClicked:null
+  };
+  
+  var c = {
+  	realWid:0,
+  	curNum:1,
+  	infRel:0,
+  	cInfMax:0,
+  	cInf:0,
+  	nbMove:0,
+  	isMoving:false,
+  	isLimitL:false,
+  	isLimitR:false,
+  	listenSlider:true
+  };        
+  
+  return this.each(function(){
+  
+  	var $this = $(this);
+
+  	if ( o ) {
+  		$.extend( s, o );
+  	}
+  
+  	// init c data
+  	for (i=1;i<=s.length+2;i++) {
+  		$this.find(".paginator_p_bloc").append($("<div class='paginator_p'></div>") );
+  	}
+  
+  	s.length = Math.min(s.length,s.nbPages);
+  
+  	var hasHoverButton = true;
+  	if ( s.nbPages <= s.length ) {
+  		$this.find(".paginator_slider").hide();
+  		$this.find(".paginator_slider").children().hide();
+  		$this.find(".paginator_bmax").hide();
+  		$this.find(".paginator_b").hide();
+  		hasHoverButton = false;
+  	}
+  
+  
+  	var totalSlides = Math.ceil(s.nbPages/s.length);
+  	if ( totalSlides < s.minSlidesForSlider) {
+  		s.withSlider = false;
+  	}
+  
+  	if ( !s.withSlider) {
+  		$this.find(".paginator_slider").hide();
+  		$this.find(".paginator_slider").children().hide();
+  	}
+  	if ( !s.withMaxButton) {
+  		$this.find(".paginator_bmax").hide();
+  	}
+  
+  	var borderPx = 0;
+  	var sBorder = $this.find(".paginator_p").first().css("border-left-width");
+  	if (sBorder.indexOf("px")>0) {
+  		borderPx = sBorder.replace("px","")*1;
+  	}
+  
+  	c.realWid = s.widthPx + s.marginPx*2 + borderPx*2;
+  
+  
+  	var widAll = 1* c.realWid * s.length ;
+  
+  	$this.find(".paginator_p").css("width",s.widthPx + "px");
+  	$this.find(".paginator_p").css("margin","0 " + s.marginPx + "px 0 " + s.marginPx + "px" );
+  
+  	$this.find(".paginator_p_wrap").css("width",widAll+ "px");
+  	$this.find(".paginator_slider").css("width",widAll+ "px");
+  
+  	c.cInfMax = s.nbPages * c.realWid - ( s.length * c.realWid ) ;
+  
+  	// init selected page
+  	s.selectedPage = Math.min(s.selectedPage,s.nbPages);
+  
+  	goToSelectedPage($this);
+  
+  
+  	// events    
+  	$this.find(".paginator_p").bind('click.jPaginator', function() {
+  		return onClickNum($(this));
+  	});
+  
+  	if (s.withSlider) {
+  	  $this.find(".paginator_slider").slider({animate: false});
+  	  
+  		$this.find( ".paginator_slider" ).bind( "slidechange.jPaginator", function(event, ui) {
+  			return handleSliderChange(event, ui);
+  		});
+  
+  		$this.find( ".paginator_slider" ).bind( "slide.jPaginator", function(event, ui) {
+  			return handleSliderChange(event, ui);
+  		});
+  	}
+  
+  	if ( hasHoverButton ) {
+  		$this.find(".paginator_b").bind('mouseenter.jPaginator', function() {
+  			return onEnterButton($(this));
+  		});
+  
+  		$this.find(".paginator_b").bind('mouseleave.jPaginator', function() {
+  			return onLeaveButton($(this));
+  		});
+  	}
+  
+  	if (s.withMaxButton) {
+  		$this.find(".paginator_bmax").bind('click.jPaginator', function() {
+  			return onClickButtonLimit($(this));
+  		});
+  	}
+  
+  	$this.find(".paginator_p").bind('mouseenter.jPaginator', function() {
+  		return onEnterNum($(this));
+  	});
+  
+  	$this.find(".paginator_p").bind('mouseleave.jPaginator', function() {
+  		return onLeaveNum($(this));
+  	});
+  
+  	function onClickNum(e) {
+          
+  		var newPage = 1*e.html();
+  		$this.find(".paginator_p.selected").removeClass("selected");
+  		s.selectedPage = newPage;
+  
+  		goToSelectedPage();
+  	};
+  
+  	function onEnterButton(e) {
+          
+  		var dir = 'left';
+  		if ( e.hasClass("right") ) { dir = 'right'; }
+  		c.isMoving = true ;                    
+  		move(dir);
+  	};
+  
+  	function onLeaveButton(e) {
+  		reset();
+  	};
+  
+  	function onClickButtonLimit(e) {
+  		var dir = 'left';
+  		if ( e.hasClass("right") ) { dir = 'right'; }
+  		moveToLimit(dir);
+  	};
+  
+  	function onEnterNum(e) {
+  		$this.find(".paginator_p.hover").removeClass("hover");
+  		e.addClass("hover");
+  	};
+  
+  	function onLeaveNum(e) {
+  		$this.find(".paginator_p.hover").removeClass("hover");
+  	};
+  
+  	function goToSelectedPage() {
+  	
+  		var newNum = s.selectedPage- Math.floor((s.length-1)/2);
+  		updateNum( newNum );
+      
+      c.listenSlider = false;
+      moveSliderTo( c.cInf);
+      c.listenSlider = true;       
+  
+      if(s.onPageClicked)
+          s.onPageClicked.call(this,$this, s.selectedPage);
+  	};
+  
+  	function updateNum(newNum) {
+  
+  		$this.find(".paginator_p.selected").removeClass("selected");
+  
+  		newNum = Math.min(s.nbPages-s.length+1,newNum);
+  		newNum = Math.max(1,newNum);
+  
+  		var n = newNum-2  ;
+  		$this.find(".paginator_p_bloc .paginator_p").each(function(i) {
+  			n += 1;
+  			$(this).html(n);
+  			if ( s.selectedPage == n ) {
+  				$(this).addClass("selected");
+  			}
+  		});
+  
+  		$this.find(".paginator_p_bloc").css("left","-"+c.realWid+"px");
+  
+  		c.curNum = newNum;
+  		c.cInf = (newNum-1)*c.realWid;
+  		c.infRel = 0;
+  
+  	};
+  	
+  	function moveSliderTo(pos) {
+  	
+  		var newPc = Math.round( (pos / c.cInfMax) * 100 ) ;
+  		var oldPc = $this.find(".paginator_slider").slider("option", "value");
+  
+  		if ( newPc != oldPc ) {
+  			$this.find(".paginator_slider").slider("option", "value", newPc);
+  		}
+  	};
+  
+  	function handleSliderChange(e, ui) {
+  
+  		if ( ! c.listenSlider ) return;
+  
+  		if ( !c.isMoving ) {
+  			moveToPc(ui.value);
+  		}
+  	};
+  
+  	function moveToPc(pc) {
+  
+  		pc = Math.min(100,pc);
+  		pc = Math.max(0,pc);
+  
+  		var realInf = Math.round( c.cInfMax * pc / 100);
+  		var gap = realInf-c.cInf;
+  
+  		if ( pc == 100 ) { updateNum(s.nbPages-s.length+1); return; } ;
+  		if ( pc == 0 ) { updateNum(1); return; } ;
+  
+  		moveGap(gap);
+  	};
+  
+  
+  	function moveGap(gap) {
+  	
+  		var iGap = Math.abs(gap)/gap;
+  		var pxGap = c.infRel+gap;
+  		var pageGap = iGap * Math.floor( Math.abs(pxGap)/c.realWid);
+  		var dGap = pxGap%c.realWid;
+  
+  		c.infRel = dGap;
+  
+  		var cInfTmp = (c.curNum - 1) * c.realWid + c.infRel ;
+  
+  		var newPage = c.curNum + pageGap;
+  		if ( newPage < 1 )				{ cInfTmp = -1 } ;
+  		if ( newPage > s.nbPages )	{ cInfTmp =  c.cInfMax + 1 } ;
+  
+  		if (cInfTmp < 0 ) { updateNum(1); c.cInf = 0; c.infRel = 0; moveSliderTo(0); c.isLimitL = true; reset(); return; }
+  		if (cInfTmp > c.cInfMax ) { updateNum(s.nbPages); c.cInf = c.cInfMax; c.infRel = 0;  moveSliderTo(c.cInfMax); c.isLimitR = true; reset(); return; }
+  
+  		c.isLimitL = false; c.isLimitR = false;
+  
+  		c.cInf = cInfTmp;
+  		
+  		if (gap == 0) return; 
+  		if ( pageGap != 0 ) updateNum(newPage);
+  
+  		moveSliderTo(c.cInf);
+  		$this.find(".paginator_p_bloc").css("left", -1*dGap-c.realWid +"px");
+  
+  	};
+  	
+  	function reset() {
+  		c.nbMove = 0;
+  		c.isMoving = false; 		
+  	};
+  	
+  	function moveToLimit(dir) {
+  	
+  		if ( c.isLimitR && dir == 'right' ) { return ; }
+  		if ( c.isLimitL && dir == 'left' ) { return ; }
+  
+  		var gap = Math.round(c.cInfMax/10);
+  
+  		if (dir=='left') { gap *= -1; }
+  
+  		moveGap(gap);
+  
+  		setTimeout(function() {
+  			c.nbMove +=1;
+  			moveToLimit(dir);
+  		}, 20);
+  
+  	};
+  	
+  	function move(dir) {
+  
+  		if ( c.isMoving ) {
+  
+  			var gap = Math.min( Math.abs(s.speed) ,5);
+  			var coeff = Math.min( Math.abs(s.coeffAcceleration) ,5);
+  			if ( s.withAcceleration ) {
+  				gap = Math.round( gap +  Math.round( coeff * (c.nbMove*c.nbMove)/80000 ) );
+  			}
+  
+  			if (dir=='left') { gap *= -1; }
+  
+  			moveGap(gap);
+  
+  			setTimeout(function() {
+  				c.nbMove +=1;
+  				move(dir);
+  			}, 10);
+  		}
+  	};
+  	
+  });
+};
 })( jQuery );
