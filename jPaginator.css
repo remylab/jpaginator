@@ -31,8 +31,9 @@
 		width:3000px;
 	}
 	.paginator_slider {
+	    float:left;
 		height: 4px;
-		top:24px;
+		top: 4px;
 		background: white;
 		border: solid 1px black;
 		position:relative;
