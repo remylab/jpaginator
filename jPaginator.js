@@ -1,24 +1,27 @@
 (function($) {
-$.fn.jPaginator = function(o) {   
-  	
+$.fn.jPaginator = function(o) {
+
 	if (this.length != 1)
     $.error( 'You must use this plugin with a unique element' );
-  
+
   var s = {
   	selectedPage:1,
   	nbPages:100,
   	length:10,
   	widthPx:30,
   	marginPx:1,
+  	overBtnLeft:null,
+  	overBtnRight:null,
+  	maxBtnLeft:null,
+    maxBtnRight:null,
   	withSlider:true,
-  	withMaxButton:true,
   	withAcceleration:true,
   	speed:2,
   	coeffAcceleration:2,
   	minSlidesForSlider:3,
   	onPageClicked:null
   };
-  
+
   var c = {
   	realWid:0,
   	curNum:1,
@@ -30,168 +33,171 @@ $.fn.jPaginator = function(o) {
   	isLimitL:false,
   	isLimitR:false,
   	listenSlider:true
-  };        
-  
+  };
+
   return this.each(function(){
-  
+
   	var $this = $(this);
 
   	if ( o ) {
   		$.extend( s, o );
   	}
-  
+
   	// init c data
   	for (i=1;i<=s.length+2;i++) {
   		$this.find(".paginator_p_bloc").append($("<div class='paginator_p'></div>") );
   	}
-  
+  	// hide over and max buttons if they're useless...
+
   	s.length = Math.min(s.length,s.nbPages);
-  
-  	var hasHoverButton = true;
+
   	if ( s.nbPages <= s.length ) {
   		$this.find(".paginator_slider").hide();
   		$this.find(".paginator_slider").children().hide();
-  		$this.find(".paginator_bmax").hide();
-  		$this.find(".paginator_b").hide();
-  		hasHoverButton = false;
   	}
-  
-  
+
+
   	var totalSlides = Math.ceil(s.nbPages/s.length);
   	if ( totalSlides < s.minSlidesForSlider) {
   		s.withSlider = false;
   	}
-  
+
   	if ( !s.withSlider) {
   		$this.find(".paginator_slider").hide();
   		$this.find(".paginator_slider").children().hide();
   	}
-  	if ( !s.withMaxButton) {
-  		$this.find(".paginator_bmax").hide();
-  	}
-  
+
   	var borderPx = 0;
   	var sBorder = $this.find(".paginator_p").first().css("border-left-width");
   	if (sBorder.indexOf("px")>0) {
   		borderPx = sBorder.replace("px","")*1;
   	}
-  
+
   	c.realWid = s.widthPx + s.marginPx*2 + borderPx*2;
-  
-  
+
+
   	var widAll = 1* c.realWid * s.length ;
-  
+
   	$this.find(".paginator_p").css("width",s.widthPx + "px");
   	$this.find(".paginator_p").css("margin","0 " + s.marginPx + "px 0 " + s.marginPx + "px" );
-  
+
   	$this.find(".paginator_p_wrap").css("width",widAll+ "px");
   	$this.find(".paginator_slider").css("width",widAll+ "px");
-  
+
   	c.cInfMax = s.nbPages * c.realWid - ( s.length * c.realWid ) ;
-  
+
   	// init selected page
   	s.selectedPage = Math.min(s.selectedPage,s.nbPages);
-  
+
   	goToSelectedPage($this);
-  
-  
-  	// events    
+
+
+  	// events
   	$this.find(".paginator_p").bind('click.jPaginator', function() {
   		return onClickNum($(this));
   	});
-  
+
   	if (s.withSlider) {
   	  $this.find(".paginator_slider").slider({animate: false});
-  	  
+
   		$this.find( ".paginator_slider" ).bind( "slidechange.jPaginator", function(event, ui) {
   			return handleSliderChange(event, ui);
   		});
-  
+
   		$this.find( ".paginator_slider" ).bind( "slide.jPaginator", function(event, ui) {
   			return handleSliderChange(event, ui);
   		});
   	}
-  
-  	if ( hasHoverButton ) {
-  		$this.find(".paginator_b").bind('mouseenter.jPaginator', function() {
-  			return onEnterButton($(this));
+
+  	if ( s.overBtnLeft ) {
+  		$(s.overBtnLeft).bind('mouseenter.jPaginator', function() {
+  			return onEnterButton($(this),'left');
   		});
-  
-  		$this.find(".paginator_b").bind('mouseleave.jPaginator', function() {
+  	}
+
+  	if ( s.overBtnRight ) {
+  		$(s.overBtnRight).bind('mouseenter.jPaginator', function() {
+  			return onEnterButton($(this),'right');
+  		});
+  	}
+    if ( s.overBtnLeft ) {
+  		$(s.overBtnLeft).bind('mouseleave.jPaginator', function() {
   			return onLeaveButton($(this));
   		});
   	}
-  
-  	if (s.withMaxButton) {
-  		$this.find(".paginator_bmax").bind('click.jPaginator', function() {
-  			return onClickButtonLimit($(this));
+    if ( s.overBtnRight ) {
+  		$(s.overBtnRight).bind('mouseleave.jPaginator', function() {
+  			return onLeaveButton($(this));
   		});
   	}
-  
+
+  	if ( s.maxBtnLeft ) {
+  		$(s.maxBtnLeft).bind('click.jPaginator', function() {
+  			return moveToLimit('left');
+  		});
+  	}
+
+  	if ( s.maxBtnRight ) {
+  		$(s.maxBtnRight).bind('click.jPaginator', function() {
+  			return moveToLimit('right');
+  		});
+  	}
+
   	$this.find(".paginator_p").bind('mouseenter.jPaginator', function() {
   		return onEnterNum($(this));
   	});
-  
+
   	$this.find(".paginator_p").bind('mouseleave.jPaginator', function() {
   		return onLeaveNum($(this));
   	});
-  
+
   	function onClickNum(e) {
-          
+
   		var newPage = 1*e.html();
   		$this.find(".paginator_p.selected").removeClass("selected");
   		s.selectedPage = newPage;
-  
+
   		goToSelectedPage();
   	};
-  
-  	function onEnterButton(e) {
-          
-  		var dir = 'left';
-  		if ( e.hasClass("right") ) { dir = 'right'; }
-  		c.isMoving = true ;                    
+
+  	function onEnterButton(e,dir) {
+  		c.isMoving = true ;
   		move(dir);
   	};
-  
+
   	function onLeaveButton(e) {
   		reset();
   	};
-  
-  	function onClickButtonLimit(e) {
-  		var dir = 'left';
-  		if ( e.hasClass("right") ) { dir = 'right'; }
-  		moveToLimit(dir);
-  	};
-  
+
   	function onEnterNum(e) {
-  		$this.find(".paginator_p.hover").removeClass("hover");
-  		e.addClass("hover");
+  		$this.find(".paginator_p.over").removeClass("over");
+  		e.addClass("over");
   	};
-  
+
   	function onLeaveNum(e) {
-  		$this.find(".paginator_p.hover").removeClass("hover");
+  		$this.find(".paginator_p.over").removeClass("over");
   	};
-  
+
   	function goToSelectedPage() {
-  	
+
   		var newNum = s.selectedPage- Math.floor((s.length-1)/2);
   		updateNum( newNum );
-      
+
       c.listenSlider = false;
       moveSliderTo( c.cInf);
-      c.listenSlider = true;       
-  
+      c.listenSlider = true;
+
       if(s.onPageClicked)
           s.onPageClicked.call(this,$this, s.selectedPage);
   	};
-  
+
   	function updateNum(newNum) {
-  
+
   		$this.find(".paginator_p.selected").removeClass("selected");
-  
+
   		newNum = Math.min(s.nbPages-s.length+1,newNum);
   		newNum = Math.max(1,newNum);
-  
+
   		var n = newNum-2  ;
   		$this.find(".paginator_p_bloc .paginator_p").each(function(i) {
   			n += 1;
@@ -200,123 +206,123 @@ $.fn.jPaginator = function(o) {
   				$(this).addClass("selected");
   			}
   		});
-  
+
   		$this.find(".paginator_p_bloc").css("left","-"+c.realWid+"px");
-  
+
   		c.curNum = newNum;
   		c.cInf = (newNum-1)*c.realWid;
   		c.infRel = 0;
-  
+
   	};
-  	
+
   	function moveSliderTo(pos) {
-  	
+
   		var newPc = Math.round( (pos / c.cInfMax) * 100 ) ;
   		var oldPc = $this.find(".paginator_slider").slider("option", "value");
-  
+
   		if ( newPc != oldPc ) {
   			$this.find(".paginator_slider").slider("option", "value", newPc);
   		}
   	};
-  
+
   	function handleSliderChange(e, ui) {
-  
+
   		if ( ! c.listenSlider ) return;
-  
+
   		if ( !c.isMoving ) {
   			moveToPc(ui.value);
   		}
   	};
-  
+
   	function moveToPc(pc) {
-  
+
   		pc = Math.min(100,pc);
   		pc = Math.max(0,pc);
-  
+
   		var realInf = Math.round( c.cInfMax * pc / 100);
   		var gap = realInf-c.cInf;
-  
+
   		if ( pc == 100 ) { updateNum(s.nbPages-s.length+1); return; } ;
   		if ( pc == 0 ) { updateNum(1); return; } ;
-  
+
   		moveGap(gap);
   	};
-  
-  
+
+
   	function moveGap(gap) {
-  	
+
   		var iGap = Math.abs(gap)/gap;
   		var pxGap = c.infRel+gap;
   		var pageGap = iGap * Math.floor( Math.abs(pxGap)/c.realWid);
   		var dGap = pxGap%c.realWid;
-  
+
   		c.infRel = dGap;
-  
+
   		var cInfTmp = (c.curNum - 1) * c.realWid + c.infRel ;
-  
+
   		var newPage = c.curNum + pageGap;
   		if ( newPage < 1 )				{ cInfTmp = -1 } ;
   		if ( newPage > s.nbPages )	{ cInfTmp =  c.cInfMax + 1 } ;
-  
+
   		if (cInfTmp < 0 ) { updateNum(1); c.cInf = 0; c.infRel = 0; moveSliderTo(0); c.isLimitL = true; reset(); return; }
   		if (cInfTmp > c.cInfMax ) { updateNum(s.nbPages); c.cInf = c.cInfMax; c.infRel = 0;  moveSliderTo(c.cInfMax); c.isLimitR = true; reset(); return; }
-  
+
   		c.isLimitL = false; c.isLimitR = false;
-  
+
   		c.cInf = cInfTmp;
-  		
-  		if (gap == 0) return; 
+
+  		if (gap == 0) return;
   		if ( pageGap != 0 ) updateNum(newPage);
-  
+
   		moveSliderTo(c.cInf);
   		$this.find(".paginator_p_bloc").css("left", -1*dGap-c.realWid +"px");
-  
+
   	};
-  	
+
   	function reset() {
   		c.nbMove = 0;
-  		c.isMoving = false; 		
+  		c.isMoving = false;
   	};
-  	
+
   	function moveToLimit(dir) {
-  	
+
   		if ( c.isLimitR && dir == 'right' ) { return ; }
   		if ( c.isLimitL && dir == 'left' ) { return ; }
-  
+
   		var gap = Math.round(c.cInfMax/10);
-  
+
   		if (dir=='left') { gap *= -1; }
-  
+
   		moveGap(gap);
-  
+
   		setTimeout(function() {
   			c.nbMove +=1;
   			moveToLimit(dir);
   		}, 20);
-  
+
   	};
-  	
+
   	function move(dir) {
-  
+
   		if ( c.isMoving ) {
-  
+
   			var gap = Math.min( Math.abs(s.speed) ,5);
   			var coeff = Math.min( Math.abs(s.coeffAcceleration) ,5);
   			if ( s.withAcceleration ) {
   				gap = Math.round( gap +  Math.round( coeff * (c.nbMove*c.nbMove)/80000 ) );
   			}
-  
+
   			if (dir=='left') { gap *= -1; }
-  
+
   			moveGap(gap);
-  
+
   			setTimeout(function() {
   				c.nbMove +=1;
   				move(dir);
   			}, 10);
   		}
   	};
-  	
+
   });
 };
 })( jQuery );

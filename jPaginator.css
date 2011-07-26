@@ -1,26 +1,3 @@
-	.paginator_root {
-		position:relative;
-		height:25px;
-	}
-	.paginator_b {
-		float:left;
-		width:30px;
-		height:20px;
-		background-color:#BCF2D5;
-		text-align:center;
-		margin:0 2px 0 2px;
-	}
-	.paginator_b:hover {
-		background-color:#8CF3BC;
-	}
-	.paginator_bmax {
-		float:left;
-		width:30px;
-		height:20px;
-		background-color:#5FAABC;
-		cursor:pointer;
-		text-align:center;
-	}
 	/* must set border width with px */
 	.paginator_p {
 		text-align:center;
@@ -29,8 +6,9 @@
 		cursor:pointer;
 		color:white;
 		background-color:#B7B7B7;
+		list-style-type:none;
 	}
-	.paginator_p.hover {
+	.paginator_p.over {
 		background-color:#8B8B8B;
 	}
 	.paginator_p.selected {
@@ -47,19 +25,17 @@
 		-moz-user-select: none;
 		-o-user-select: none;
 		user-select: none;
-	} 
+	}
 	.paginator_p_bloc {
-		position:relative;overflow:hidden;
+		position:relative;
 		width:3000px;
 	}
 	.paginator_slider {
 		height: 4px;
-		top:0px;
-		margin:0 0 0 60px;
-		background: #BBBBBB;
-		position: relative;
+		top:24px;
 		background: white;
 		border: solid 1px black;
+		position:relative;
 	}
 
 	.paginator_slider .ui-slider-handle {
