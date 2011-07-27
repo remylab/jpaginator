@@ -1,7 +1,7 @@
 Use this plugin with a unique element, example : $("#test1").jPaginator().
+
+Demo page : http://www.remylab.net46.net/demos/jquery-plugins/jpaginator/
 Example of code :
-
-
 
 $("#test1").jPaginator({
   nbPages:54,
