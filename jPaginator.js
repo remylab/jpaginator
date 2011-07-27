@@ -45,7 +45,7 @@ $.fn.jPaginator = function(o) {
 
   	// init c data
   	for (i=1;i<=s.length+2;i++) {
-  		$this.find(".paginator_p_bloc").append($("<div class='paginator_p'></div>") );
+  		$this.find(".paginator_p_bloc").append($("<a class='paginator_p'></a>") );
   	}
   	// hide over and max buttons if they're useless...
 
