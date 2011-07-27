@@ -1,7 +1,9 @@
-Use this plugin with a unique element, example : $("#test1").jPaginator().
+Use this plugin with a unique element, don't forget the CSS page jPaginator.css.
+Dependencies : jQuery 1.3.2+, jQuery UI Slider
 
 Demo page : http://www.remylab.net46.net/demos/jquery-plugins/jpaginator/
-Example of code :
+
+Code sample :
 
 $("#test1").jPaginator({
   nbPages:54,
@@ -37,9 +39,3 @@ The HTML :
       </div>
 
   </div>
-    
-    		
-Don't forget the CSS page jPaginator.css.
-		
-Dependencies : jQuery 1.3.2+, jQuery UI Slider
-Demo page : http://www.remylab.net46.net/demos/jquery-plugins/jpaginator/  
