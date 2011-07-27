@@ -270,7 +270,6 @@ $.fn.jPaginator = function(o) {
   
   		moveSliderTo(c.cInf);
   		$this.find(".paginator_p_bloc").css("left", -1*dGap-c.realWid +"px");
-  
   	};
   	
   	function reset() {
