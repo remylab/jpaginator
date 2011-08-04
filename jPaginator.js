@@ -38,64 +38,14 @@ $.fn.jPaginator = function(o) {
   return this.each(function(){
 
   	var $this = $(this);
+  	if ( o ) $.extend( s, o );
 
-  	if ( o ) {
-  		$.extend( s, o );
-  	}
-
-  	// init c data
-  	for (i=1;i<=s.length+2;i++) {
-  		$this.find(".paginator_p_bloc").append($("<a class='paginator_p'></a>") );
-  	}
-  	// hide over and max buttons if they're useless...
-
-  	s.length = Math.min(s.length,s.nbPages);
-
-  	if ( s.nbPages <= s.length ) {
-  		$this.find(".paginator_slider").hide();
-  		$this.find(".paginator_slider").children().hide();
-  	}
-
-
-  	var totalSlides = Math.ceil(s.nbPages/s.length);
-  	if ( totalSlides < s.minSlidesForSlider) {
-  		s.withSlider = false;
-  	}
-
-  	if ( !s.withSlider) {
-  		$this.find(".paginator_slider").hide();
-  		$this.find(".paginator_slider").children().hide();
-  	}
-
-  	var borderPx = 0;
-  	var sBorder = $this.find(".paginator_p").first().css("border-left-width");
-  	if (sBorder.indexOf("px")>0) {
-  		borderPx = sBorder.replace("px","")*1;
-  	}
-
-  	c.realWid = s.widthPx + s.marginPx*2 + borderPx*2;
-
-
-  	var widAll = 1* c.realWid * s.length ;
-
-  	$this.find(".paginator_p").css("width",s.widthPx + "px");
-  	$this.find(".paginator_p").css("margin","0 " + s.marginPx + "px 0 " + s.marginPx + "px" );
-
-  	$this.find(".paginator_p_wrap").css("width",widAll+ "px");
-  	$this.find(".paginator_slider").css("width",widAll+ "px");
-
-  	c.cInfMax = s.nbPages * c.realWid - ( s.length * c.realWid ) ;
-
-  	// init selected page
-  	s.selectedPage = Math.min(s.selectedPage,s.nbPages);
-
-  	goToSelectedPage($this);
-
+  	init(o);
 
   	// events
-  	$this.find(".paginator_p").bind('click.jPaginator', function() {
-  		return onClickNum($(this));
-  	});
+    $(this).bind('reset', function(event,o) {
+        init(o);moveGap(1);
+    });
 
   	if (s.withSlider) {
   	  $this.find(".paginator_slider").slider({animate: false});
@@ -322,6 +272,63 @@ $.fn.jPaginator = function(o) {
   			}, 10);
   		}
   	};
+  	function init(o) {
+
+        if ( o ) $.extend( s, o );
+
+  	    $this.find(".paginator_p_bloc").html("");
+        // init c data
+        for (i=1;i<=s.length+2;i++) {
+            $this.find(".paginator_p_bloc").append($("<a class='paginator_p'></a>") );
+        }
+        // hide over and max buttons if they're useless...
+
+        s.length = Math.min(s.length,s.nbPages);
+
+        if ( s.nbPages <= s.length ) {
+            $this.find(".paginator_slider").hide();
+            $this.find(".paginator_slider").children().hide();
+        }
+
+
+        var totalSlides = Math.ceil(s.nbPages/s.length);
+        if ( totalSlides < s.minSlidesForSlider) {
+            s.withSlider = false;
+        }
+
+        if ( !s.withSlider) {
+            $this.find(".paginator_slider").hide();
+            $this.find(".paginator_slider").children().hide();
+        }
+
+        var borderPx = 0;
+        var sBorder = $this.find(".paginator_p").first().css("border-left-width");
+        if (sBorder.indexOf("px")>0) {
+            borderPx = sBorder.replace("px","")*1;
+        }
+
+        c.realWid = s.widthPx + s.marginPx*2 + borderPx*2;
+
+
+        var widAll = 1* c.realWid * s.length ;
+
+        $this.find(".paginator_p").css("width",s.widthPx + "px");
+        $this.find(".paginator_p").css("margin","0 " + s.marginPx + "px 0 " + s.marginPx + "px" );
+
+        $this.find(".paginator_p_wrap").css("width",widAll+ "px");
+        $this.find(".paginator_slider").css("width",widAll+ "px");
+
+        c.cInfMax = s.nbPages * c.realWid - ( s.length * c.realWid ) ;
+
+        // init selected page
+        s.selectedPage = Math.min(s.selectedPage,s.nbPages);
+
+        goToSelectedPage($this);
+
+        $this.find(".paginator_p").bind('click.jPaginator', function() {
+            return onClickNum($(this));
+        });
+  	}
 
   });
 };
