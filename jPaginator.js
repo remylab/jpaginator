@@ -1,13 +1,13 @@
 (function($) {
 $.fn.jPaginator = function(o) {
 
-	if (this.length != 1)
+	if (this.size() != 1)
     $.error( 'You must use this plugin with a unique element' );
 
   var s = {
   	selectedPage:1,
   	nbPages:100,
-  	length:10,
+    nbVisible:10,
   	widthPx:30,
   	marginPx:1,
   	overBtnLeft:null,
@@ -40,11 +40,13 @@ $.fn.jPaginator = function(o) {
   	var $this = $(this);
   	if ( o ) $.extend( s, o );
 
-  	init(o);
+  	init(s);
 
   	// events
     $(this).bind('reset', function(event,o) {
-        init(o);moveGap(1);
+        $.extend( s , o );
+        init(s);
+        moveGap(1);
     });
 
   	if (s.withSlider) {
@@ -130,7 +132,7 @@ $.fn.jPaginator = function(o) {
 
   	function goToSelectedPage() {
 
-  		var newNum = s.selectedPage- Math.floor((s.length-1)/2);
+  		var newNum = s.selectedPage- Math.floor((s.nbVisible-1)/2);
   		updateNum( newNum );
 
       c.listenSlider = false;
@@ -145,7 +147,7 @@ $.fn.jPaginator = function(o) {
 
   		$this.find(".paginator_p.selected").removeClass("selected");
 
-  		newNum = Math.min(s.nbPages-s.length+1,newNum);
+  		newNum = Math.min(s.nbPages-s.nbVisible+1,newNum);
   		newNum = Math.max(1,newNum);
 
   		var n = newNum-2  ;
@@ -192,7 +194,7 @@ $.fn.jPaginator = function(o) {
   		var realInf = Math.round( c.cInfMax * pc / 100);
   		var gap = realInf-c.cInf;
 
-  		if ( pc == 100 ) { updateNum(s.nbPages-s.length+1); return; } ;
+  		if ( pc == 100 ) { updateNum(s.nbPages-s.nbVisible+1); return; } ;
   		if ( pc == 0 ) { updateNum(1); return; } ;
 
   		moveGap(gap);
@@ -272,33 +274,33 @@ $.fn.jPaginator = function(o) {
   			}, 10);
   		}
   	};
-  	function init(o) {
+  	function init(s) {
 
-        if ( o ) $.extend( s, o );
-
-  	    $this.find(".paginator_p_bloc").html("");
+  	    $this.find(".paginator_p_bloc > .paginator_p").remove();
         // init c data
-        for (i=1;i<=s.length+2;i++) {
+        for (i=1;i<=s.nbVisible+2;i++) {
             $this.find(".paginator_p_bloc").append($("<a class='paginator_p'></a>") );
         }
         // hide over and max buttons if they're useless...
 
-        s.length = Math.min(s.length,s.nbPages);
+        s.nbVisible = Math.min(s.nbVisible,s.nbPages);
 
-        if ( s.nbPages <= s.length ) {
+        if ( s.nbPages <= s.nbVisible ) {
             $this.find(".paginator_slider").hide();
             $this.find(".paginator_slider").children().hide();
         }
 
 
-        var totalSlides = Math.ceil(s.nbPages/s.length);
-        if ( totalSlides < s.minSlidesForSlider) {
-            s.withSlider = false;
-        }
+        var totalSlides = Math.ceil(s.nbPages/s.nbVisible);
+        if ( totalSlides < s.minSlidesForSlider) s.withSlider = false;
+        else s.withSlider = true;
 
         if ( !s.withSlider) {
             $this.find(".paginator_slider").hide();
             $this.find(".paginator_slider").children().hide();
+        } else { 
+            $this.find(".paginator_slider").show();
+            $this.find(".paginator_slider").children().show();
         }
 
         var borderPx = 0;
@@ -310,7 +312,7 @@ $.fn.jPaginator = function(o) {
         c.realWid = s.widthPx + s.marginPx*2 + borderPx*2;
 
 
-        var widAll = 1* c.realWid * s.length ;
+        var widAll = 1* c.realWid * s.nbVisible ;
 
         $this.find(".paginator_p").css("width",s.widthPx + "px");
         $this.find(".paginator_p").css("margin","0 " + s.marginPx + "px 0 " + s.marginPx + "px" );
@@ -318,7 +320,7 @@ $.fn.jPaginator = function(o) {
         $this.find(".paginator_p_wrap").css("width",widAll+ "px");
         $this.find(".paginator_slider").css("width",widAll+ "px");
 
-        c.cInfMax = s.nbPages * c.realWid - ( s.length * c.realWid ) ;
+        c.cInfMax = s.nbPages * c.realWid - ( s.nbVisible * c.realWid ) ;
 
         // init selected page
         s.selectedPage = Math.min(s.selectedPage,s.nbPages);
