@@ -40,13 +40,12 @@ $.fn.jPaginator = function(o) {
   	var $this = $(this);
   	if ( o ) $.extend( s, o );
 
-  	init(s);
+  	init();
 
   	// events
     $(this).bind('reset', function(event,o) {
         $.extend( s , o );
-        init(s);
-        moveGap(1);
+        init();
     });
 
   	if (s.withSlider) {
@@ -65,16 +64,15 @@ $.fn.jPaginator = function(o) {
   		$(s.overBtnLeft).bind('mouseenter.jPaginator', function() {
   			return onEnterButton($(this),'left');
   		});
-  	}
-
-  	if ( s.overBtnRight ) {
-  		$(s.overBtnRight).bind('mouseenter.jPaginator', function() {
-  			return onEnterButton($(this),'right');
-  		});
-  	}
+  	}   
     if ( s.overBtnLeft ) {
   		$(s.overBtnLeft).bind('mouseleave.jPaginator', function() {
   			return onLeaveButton($(this));
+  		});
+  	}
+  	if ( s.overBtnRight ) {
+  		$(s.overBtnRight).bind('mouseenter.jPaginator', function() {
+  			return onEnterButton($(this),'right');
   		});
   	}
     if ( s.overBtnRight ) {
@@ -88,7 +86,6 @@ $.fn.jPaginator = function(o) {
   			return moveToLimit('left');
   		});
   	}
-
   	if ( s.maxBtnRight ) {
   		$(s.maxBtnRight).bind('click.jPaginator', function() {
   			return moveToLimit('right');
@@ -274,32 +271,47 @@ $.fn.jPaginator = function(o) {
   			}, 10);
   		}
   	};
-  	function init(s) {
+  	function init() {
+  	
+  	    var totalSlides,bSlider,bOver;
+
+        s.nbVisible = Math.min(s.nbVisible,s.nbPages);
 
   	    $this.find(".paginator_p_bloc > .paginator_p").remove();
         // init c data
         for (i=1;i<=s.nbVisible+2;i++) {
             $this.find(".paginator_p_bloc").append($("<a class='paginator_p'></a>") );
         }
-        // hide over and max buttons if they're useless...
-
-        s.nbVisible = Math.min(s.nbVisible,s.nbPages);
-
-        if ( s.nbPages <= s.nbVisible ) {
-            $this.find(".paginator_slider").hide();
-            $this.find(".paginator_slider").children().hide();
+        // hide over and max buttons if they're useless...    
+        bOver = (s.nbVisible<s.nbPages);
+        if ( s.overBtnLeft ) {
+        	 if (bOver) $(s.overBtnLeft).show(); else $(s.overBtnLeft).hide();
         }
-
-        var totalSlides = Math.ceil(s.nbPages/s.nbVisible), bSlider = s.withSlider;
-        if ( totalSlides < s.minSlidesForSlider) bSlider = false; // for hide slider when needed
-        else bSlider = s.withSlider;
-
-        if ( !bSlider) {
+        if ( s.overBtnRight ) {
+        	 if (bOver) $(s.overBtnRight).show(); else $(s.overBtnRight).hide();  
+        }
+        if ( s.maxBtnLeft ) {
+        	 if (bOver) $(s.maxBtnLeft).show(); else $(s.maxBtnLeft).hide();  
+        }
+        if ( s.maxBtnRight ) {
+        	 if (bOver) $(s.maxBtnRight).show(); else $(s.maxBtnRight).hide();  
+        }
+  	
+        if ( !bOver ) {
             $this.find(".paginator_slider").hide();
             $this.find(".paginator_slider").children().hide();
-        } else { 
-            $this.find(".paginator_slider").show();
-            $this.find(".paginator_slider").children().show();
+        } else {
+            totalSlides = Math.ceil(s.nbPages/s.nbVisible); bSlider = s.withSlider;
+            if ( totalSlides < s.minSlidesForSlider) bSlider = false; // hide slider when needed
+            else bSlider = s.withSlider;
+    
+            if ( !bSlider) {
+                $this.find(".paginator_slider").hide();
+                $this.find(".paginator_slider").children().hide();
+            } else { 
+                $this.find(".paginator_slider").show();
+                $this.find(".paginator_slider").children().show();
+            }
         }
 
         var borderPx = 0;
@@ -324,7 +336,7 @@ $.fn.jPaginator = function(o) {
         // init selected page
         s.selectedPage = Math.min(s.selectedPage,s.nbPages);
 
-        goToSelectedPage($this);
+        goToSelectedPage();
 
         $this.find(".paginator_p").bind('click.jPaginator', function() {
             return onClickNum($(this));
