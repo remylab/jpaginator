@@ -290,12 +290,11 @@ $.fn.jPaginator = function(o) {
             $this.find(".paginator_slider").children().hide();
         }
 
+        var totalSlides = Math.ceil(s.nbPages/s.nbVisible), bSlider = s.withSlider;
+        if ( totalSlides < s.minSlidesForSlider) bSlider = false; // for hide slider when needed
+        else bSlider = s.withSlider;
 
-        var totalSlides = Math.ceil(s.nbPages/s.nbVisible);
-        if ( totalSlides < s.minSlidesForSlider) s.withSlider = false;
-        else s.withSlider = true;
-
-        if ( !s.withSlider) {
+        if ( !bSlider) {
             $this.find(".paginator_slider").hide();
             $this.find(".paginator_slider").children().hide();
         } else { 
