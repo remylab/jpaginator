@@ -5,7 +5,7 @@ $.fn.jPaginator = function(o) {
     $.error( 'You must use this plugin with a unique element' );
 
   var s = {
-  	selectedPage:1,
+  	selectedPage:null,
   	nbPages:100,
     nbVisible:10,
   	widthPx:30,
@@ -106,7 +106,11 @@ $.fn.jPaginator = function(o) {
   		$this.find(".paginator_p.selected").removeClass("selected");
   		s.selectedPage = newPage;
 
-  		goToSelectedPage();
+  		goToSelectedPage(); 
+      $($this.find(".paginator_p_bloc .paginator_p").get(s.selectedPage-c.curNum+1)).addClass("selected"); 
+
+      if(s.onPageClicked)
+          s.onPageClicked.call(this,$this, s.selectedPage); 
   	};
 
   	function onEnterButton(e,dir) {
@@ -135,9 +139,6 @@ $.fn.jPaginator = function(o) {
       c.listenSlider = false;
       moveSliderTo( c.cInf);
       c.listenSlider = true;
-
-      if(s.onPageClicked)
-          s.onPageClicked.call(this,$this, s.selectedPage);
   	};
 
   	function updateNum(newNum) {
@@ -334,9 +335,10 @@ $.fn.jPaginator = function(o) {
         c.cInfMax = s.nbPages * c.realWid - ( s.nbVisible * c.realWid ) ;
 
         // init selected page
-        s.selectedPage = Math.min(s.selectedPage,s.nbPages);
-
-        goToSelectedPage();
+        s.selectedPage = Math.min(s.selectedPage,s.nbPages);       
+        goToSelectedPage();moveGap(0);
+        if ( s.selectedPage )
+            $($this.find(".paginator_p_bloc .paginator_p").get(s.selectedPage-c.curNum+1)).addClass("selected"); 
 
         $this.find(".paginator_p").bind('click.jPaginator', function() {
             return onClickNum($(this));
