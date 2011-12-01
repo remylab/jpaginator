@@ -1,3 +1,4 @@
+/* jPaginator minified - version: 1.0 (2011) - author: Remy Elazare - http://remylab.net46.net/demos/jquery-plugins/jpaginator/ */
 (function($) {
 $.fn.jPaginator = function(o) {
 
@@ -58,6 +59,8 @@ $.fn.jPaginator = function(o) {
   		$this.find( ".paginator_slider" ).bind( "slide.jPaginator", function(event, ui) {
   			return handleSliderChange(event, ui);
   		});
+
+  		moveSliderTo(c.cInf);
   	}
 
   	if ( s.overBtnLeft ) {
@@ -106,11 +109,12 @@ $.fn.jPaginator = function(o) {
   		$this.find(".paginator_p.selected").removeClass("selected");
   		s.selectedPage = newPage;
 
-  		goToSelectedPage(); 
-      $($this.find(".paginator_p_bloc .paginator_p").get(s.selectedPage-c.curNum+1)).addClass("selected"); 
+  		//goToSelectedPage(); // uncomment to center page num on click
+  		
+  		$($this.find(".paginator_p_bloc .paginator_p").get(s.selectedPage-c.curNum+1)).addClass("selected"); 
 
-      if(s.onPageClicked)
-          s.onPageClicked.call(this,$this, s.selectedPage); 
+  		if(s.onPageClicked)
+  			s.onPageClicked.call(this,$this, s.selectedPage); 
   	};
 
   	function onEnterButton(e,dir) {
@@ -336,13 +340,15 @@ $.fn.jPaginator = function(o) {
 
         // init selected page
         s.selectedPage = Math.min(s.selectedPage,s.nbPages);       
-        goToSelectedPage();moveGap(0);
+        goToSelectedPage();
+        
         if ( s.selectedPage )
             $($this.find(".paginator_p_bloc .paginator_p").get(s.selectedPage-c.curNum+1)).addClass("selected"); 
 
         $this.find(".paginator_p").bind('click.jPaginator', function() {
             return onClickNum($(this));
         });
+        
   	}
 
   });
