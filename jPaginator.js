@@ -41,7 +41,7 @@ $.fn.jPaginator = function(o) {
   	var $this = $(this);
   	if ( o ) $.extend( s, o );
 
-  	init();
+  	init(); 
 
   	// events
     $(this).bind('reset', function(event,o) {
@@ -49,7 +49,7 @@ $.fn.jPaginator = function(o) {
         init();
     });
 
-  	if (s.withSlider && ( s.nbVisible < s.nbPages ) ) {
+  	if (s.withSlider ) {
   	  $this.find(".paginator_slider").slider({animate: false});
 
   		$this.find( ".paginator_slider" ).bind( "slidechange.jPaginator", function(event, ui) {
@@ -60,7 +60,9 @@ $.fn.jPaginator = function(o) {
   			return handleSliderChange(event, ui);
   		});
 
-  		moveSliderTo(c.cInf);
+      if ( ( s.nbVisible < s.nbPages ) ) {
+  		  moveSliderTo(c.cInf);
+  		}
   	}
 
   	if ( s.overBtnLeft ) {
