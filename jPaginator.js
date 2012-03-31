@@ -49,7 +49,7 @@ $.fn.jPaginator = function(o) {
         init();
     });
 
-  	if (s.withSlider) {
+  	if (s.withSlider && ( s.nbVisible < s.nbPages ) ) {
   	  $this.find(".paginator_slider").slider({animate: false});
 
   		$this.find( ".paginator_slider" ).bind( "slidechange.jPaginator", function(event, ui) {
