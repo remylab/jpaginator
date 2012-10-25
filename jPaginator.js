@@ -173,6 +173,7 @@ $.fn.jPaginator = function(o) {
 
   	function moveSliderTo(pos) {
 
+  		$this.find(".paginator_slider").slider();
   		var newPc = Math.round( (pos / c.cInfMax) * 100 ) ;
   		var oldPc = $this.find(".paginator_slider").slider("option", "value");
 
