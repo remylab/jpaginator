@@ -3,7 +3,7 @@ Dependencies : jQuery 1.3.2+, jQuery UI Slider
 
 New feature : Now you can reset the options with this snippet : $("#test1").trigger("reset",{nbPages:200,selectedPage:50})
 
-Demo page : http://remylab.github.com/jpaginator/
+Demo page : http://remylab.github.io/jpaginator/
 
 Code sample :
 
